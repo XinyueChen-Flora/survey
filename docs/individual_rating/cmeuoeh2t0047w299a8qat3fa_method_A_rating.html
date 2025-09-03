@@ -1,0 +1,506 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Method A Evaluation</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --border: 214.3 31.8% 91.4%;
+            --radius: 0.5rem;
+            --blue: 217 91% 60%;
+            --blue-foreground: 222.2 84% 4.9%;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 95%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--blue));
+            color: hsl(var(--blue-foreground));
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .task-context {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 1rem auto 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .current-task {
+            font-size: 1.125rem;
+            color: hsl(var(--blue));
+            margin-bottom: 0.5rem;
+        }
+        
+        .reference-task {
+            font-size: 1rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 1rem;
+        }
+        
+        .evaluation-goal {
+            font-size: 1rem;
+            color: hsl(var(--foreground));
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .evaluation-criteria {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        
+        .evaluation-criteria h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .criteria-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .criteria-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .criteria-list strong {
+            color: hsl(var(--primary));
+            font-weight: 600;
+        }
+        
+        .comparison-container {
+            margin-bottom: 4rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+        
+        .reference-card,
+        .method-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .reference-header {
+            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, hsl(var(--blue) / 0.1) 0%, hsl(var(--blue) / 0.05) 100%);
+        }
+        
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .task-label {
+            background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.8) 100%);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--secondary-foreground));
+            margin: 0;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .card-content h1,
+        .card-content h2,
+        .card-content h3,
+        .card-content h4,
+        .card-content h5,
+        .card-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content h1:first-of-type,
+        .card-content h2:first-of-type,
+        .card-content h3:first-of-type,
+        .card-content h4:first-of-type,
+        .card-content h5:first-of-type,
+        .card-content h6:first-of-type {
+            margin-top: 0;
+        }
+        
+        .card-content h1 { font-size: 1.5rem; }
+        .card-content h2 { font-size: 1.25rem; }
+        .card-content h3 { font-size: 1.125rem; }
+        .card-content h4 { font-size: 1rem; }
+        
+        .card-content p {
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content ul,
+        .card-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .card-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content em {
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .card-content blockquote {
+            border-left: 4px solid hsl(var(--border));
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="method-badge">Method A</div>
+            <h1>Method A Evaluation</h1>
+            <div class="task-context">
+                <p class="current-task"><strong>Current Task:</strong> Canva's New AI Video Editor</p>
+                <p class="reference-task"><strong>Reference Task:</strong> Notion's New AI Database Assistant Feature</p>
+                <p class="evaluation-goal">Evaluate how well this AI method adapted the expert's approach to the new task context.</p>
+            </div>
+            
+            <div class="evaluation-criteria">
+                <h3>Evaluation Criteria</h3>
+                <ul class="criteria-list">
+                    <li><strong>Overall Quality:</strong> Rate the effectiveness and completeness of this adaptation</li>
+                    <li><strong>Task Relevance:</strong> How well does this address the new context?</li>
+                    <li><strong>Coherence:</strong> Assess the logical flow and consistency</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="comparison-container">
+            <div class="comparison-grid">
+                <div class="reference-card">
+                    <div class="card-header reference-header">
+                        <h2>📄 Original Expert Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Notion's New AI Database Assistant Feature</div>
+                        <div class="content-wrapper">
+                            <p><strong>Blog Post Draft: Notion’s New AI Database Assistant — Turning Your Team’s Knowledge into Action</strong></p>
+<hr />
+<p>Three years into the so‑called “AI revolution,” something strange has happened: many of us are still drowning in information. We’ve added countless apps to our stacks, plug in a new AI subscription every few months, and yet—teams are still hunting for answers in old meeting notes, copy‑pasting between tools, and spending hours writing status updates no one has time to read.</p>
+<p>This isn’t just inefficient—it’s exhausting.</p>
+<p>At Notion, we’ve listened closely to what leaders, product managers, and operations teams are saying. In our customer research, “integrating AI” has now overtaken “hiring talent” as the number‑one business challenge. The root of the problem? Most AI tools live <em>outside</em> your workflow. They have zero context about your company’s processes, your projects, or the way you organize information. Which means they can’t help you in the moments that matter.</p>
+<p>With the new <strong>Notion AI Database Assistant</strong>, that changes.</p>
+<hr />
+<h3>From Passive Knowledge to Active Intelligence</h3>
+<p>Imagine opening a project database in Notion and having an assistant that knows not just what’s in the table, but what’s behind it: every linked doc, goal, deliverable, and stakeholder note. It can summarize thousands of rows instantly, spot patterns in your progress, suggest next steps, and even draft updates—all without you having to leave the page.</p>
+<p>This isn’t just “ChatGPT dropped into your workspace.” It’s AI woven into the very fabric of your team’s knowledge base, acting on the same information you use to make decisions. When your data changes, so does its understanding. When a new teammate joins, they inherit not just the information, but the intelligence layered over it.</p>
+<hr />
+<h3>Why We’re Launching This Now</h3>
+<p>The timing is no accident. Across the industry, we’re seeing a shift from generic AI models toward <strong>context‑rich, embedded AI</strong>:</p>
+<ul>
+<li><strong>No‑code/low‑code adoption is skyrocketing</strong> — 2025 trend reports show these platforms are breaking barriers for business users, enabling them to build without engineering bottlenecks. Embedding AI into these platforms, as we’ve done in Notion databases, means more people can adapt tools to the way they actually work.</li>
+<li><strong>Knowledge management is becoming intelligent</strong> — Analysts note that systems are evolving from static repositories into dynamic ecosystems that <em>proactively</em> surface insights. Teams no longer just “store” information; they expect their tools to connect the dots for them.</li>
+<li><strong>Competitors are racing to redefine workflows</strong> — Airtable has relaunched as an “AI‑native app platform” aiming to automate work at scale. monday.com has made AI core to their “Work Execution Era” with assistants like monday sidekick. These moves validate the market need—but they also reveal a gap: deep, contextually‑aware AI inside the flexible, all‑in‑one workspace that millions already use.</li>
+</ul>
+<p>Notion’s strength has always been that your docs, projects, and databases live side by side, deeply linked. Now, AI can move fluidly through that graph of connected knowledge—making sense of it faster than any human could.</p>
+<hr />
+<h3>Real‑World Stories: The Busywork Breakthrough</h3>
+<p>Meet <strong>Ravi</strong>, a product manager at a fast‑growing SaaS company. Before the AI Database Assistant, his week looked like this: an hour every Monday gathering metrics from multiple tables; Wednesday afternoons spent writing a “state of the project” update by copy‑pasting data into slides; Friday evenings tracking down blockers across teams before leadership sync.</p>
+<p>Now? The AI Database Assistant:</p>
+<ul>
+<li>Generates a project status summary, complete with risks and next steps, in under a minute.</li>
+<li>Flags patterns in customer feedback linked to the release database.</li>
+<li>Prepares stakeholder updates that pull from multiple linked workspaces, ready to share.</li>
+</ul>
+<p>Ravi estimates he’s reclaimed <strong>five to seven hours a week</strong>—time he now invests in roadmap planning and user interviews.</p>
+<p>Multiply that across every project lead in the company, and you’re not just saving time—you’re compounding your team’s ability to execute.</p>
+<hr />
+<h3>What Makes the Notion AI Database Assistant Different</h3>
+<ol>
+<li>
+<p><strong>Deep Context Awareness</strong><br />
+   It understands your content holistically—pages, databases, relationships—without exporting data or breaking privacy boundaries.</p>
+</li>
+<li>
+<p><strong>Embedded in Your Existing Workflow</strong><br />
+   No separate logins, no juggling tabs. AI features live right where the work happens.</p>
+</li>
+<li>
+<p><strong>Customizable &amp; No‑Code Friendly</strong><br />
+   Integrated with Notion’s existing no‑code flexibility, so you can tailor prompts, views, and outputs without engineering.</p>
+</li>
+<li>
+<p><strong>Transparent &amp; Private</strong><br />
+   Your data stays in your workspace. AI outputs are explainable and easy to refine.</p>
+</li>
+</ol>
+<hr />
+<h3>Proof Points That Matter</h3>
+<p>We’re not the only ones who believe embedded AI is the future:</p>
+<ul>
+<li><strong>72%</strong> of enterprises in a recent industry survey said AI will be “much more effective” when integrated directly into their systems of record, rather than as standalone tools.  </li>
+<li>Adoption of no‑code/low‑code platforms is growing at <strong>20%+ annually</strong> (Quixy, 2025 trends), driven by demand for accessible, customizable solutions.  </li>
+<li>Knowledge management experts predict that by the end of 2025, <strong>over half of enterprise KM systems</strong> will include proactive AI assistants to surface relevant content without explicit search.</li>
+</ul>
+<p>With Notion AI Database Assistant, we’re delivering on these predictions—right inside the tool your team already relies on.</p>
+<hr />
+<h3>The Bigger Picture: The Human Side of AI at Work</h3>
+<p>There’s a bigger story here than just productivity. When you strip away the repetitive, low‑judgment work, you give people back the mental space for creativity, problem‑solving, and connection.</p>
+<p>Airtable’s CEO calls their AI vision “the magic of vibe coding.” monday.com talks about a “Work Execution Era.” We agree that AI heralds a new era—but for us, the core is a more <em>human</em> one: helping teams spend more time on the work that only humans can do.</p>
+<p>The Notion AI Database Assistant doesn’t replace judgment. It replaces the tedious scaffolding around it: the status checks, the data wrangling, the manual cross‑referencing. You still decide what matters—AI just gets you to that moment of decision faster.</p>
+<hr />
+<h3>How to Get Started</h3>
+<p>If your team already uses Notion databases, the AI Database Assistant is available now in the workspace menu. Start with a simple use case: have it summarize your most active project table. Or get more ambitious: ask it to compare quarterly OKR progress across departments and suggest areas of focus.</p>
+<p>Whatever you choose, you’ll see immediately what it means to have your team’s <em>collective knowledge</em> working for you—not sitting idle in rows and columns.</p>
+<hr />
+<h3>Closing</h3>
+<p>The AI hype cycle has been noisy. But beneath it, a real transformation is taking place: the evolution of our tools from passive storage systems to active collaborators.</p>
+<p>The Notion AI Database Assistant is our step into that future. It’s AI with the full context of your work—ready to analyze, surface, and suggest, so your team can move from knowledge to action without losing a beat.</p>
+<p>If you’ve ever</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="card-header method-header">
+                        <h2>🔄 Method A Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Canva's New AI Video Editor</div>
+                        <div class="content-wrapper">
+                            <h2>Title: Canva AI Video Editor — Launch Goal and High-Level Market Trends Overview</h2>
+<h2>1) Overall Launch Goal</h2>
+<ul>
+<li>Goal: Announce and position Canva’s new AI Video Editor as the fastest, easiest, and most brand-consistent way for non‑experts and teams to create, localize, and publish videos across channels—driving trial, engagement, and Pro/Teams conversion.</li>
+<li>90‑Day Success Metrics (directional targets):</li>
+<li>Awareness: +30% lift in aided awareness for “Canva for video” among SMB marketers/designers in priority geos.</li>
+<li>Adoption: 1.5–2.0M AI video projects started by Free users; 15–20% repeat creation within 30 days.</li>
+<li>Monetization: +3–5% Pro conversion uplift among users who start an AI video project; +8–12% increase in Teams trials initiated from video collaboration flows.</li>
+<li>Engagement: 25% reduction in median time‑to‑first‑export for first‑time video creators.</li>
+</ul>
+<h2>2) High-Level Overview of AI Video Creation Market Trends</h2>
+<ul>
+<li>Market scope: AI video creation spans both generative video (text/image/video-to-video) and AI-assisted editing, plus avatar/localization platforms. Buyers compare across categories based on speed, control, and publish-ready outputs, not just model novelty.</li>
+<li>Demand drivers:</li>
+<li>Always-on short-form content pushes high-volume, fast-turn workflows.</li>
+<li>“Idea-to-draft” in minutes (prompt → storyboard → rough cut) is becoming expected.</li>
+<li>Multi-language translation and dubbing expand reach; accessibility (captions) is mandatory.</li>
+<li>Brand governance (brand kits, locked templates, approvals) is a core requirement for teams.</li>
+<li>Distribution-first creation (smart resize, safe zones, channel presets) matters as much as editing.</li>
+<li>Technology trajectory:</li>
+<li>Video diffusion/transformer models continue to improve fidelity and motion; temporal consistency and character persistence are improving but not solved for long sequences.</li>
+<li>Conditioning and reference controls (storyboards, poses, image refs) reduce randomness and improve on-brand outputs.</li>
+<li>Integrated audio/TTS quality is rising; consented voice cloning appears in enterprise contexts with stronger policy gates.</li>
+<li>Latency vs quality trade-offs persist; fast previews with upscale/final renders are standard UX patterns.</li>
+<li>Safety/provenance (e.g., watermarking, C2PA-like tags, content filters) are increasingly table stakes.</li>
+<li>Pricing patterns:</li>
+<li>Freemium acquisition with watermarked outputs and generation minute/credit caps; HD/4K and watermark removal behind paid tiers.</li>
+<li>Credit packs for heavy gen workloads; Teams/Enterprise SKUs add collaboration and governance.</li>
+<li>Competitive backdrop (selected):</li>
+<li>Generative video labs (Runway, Pika, Luma; limited-access frontier models like Sora/Veo):<ul>
+<li>Pros: Rapid innovation; creative effects; photoreal demos.</li>
+<li>Cons: Variability; limited brand controls; fragmented workflows for collaboration/publishing.</li>
+</ul>
+</li>
+<li>AI-assisted editors (CapCut, Descript, VEED, Clipchamp, Adobe Express):<ul>
+<li>Pros: Ease of use; strong social features; good captioning and effects.</li>
+<li>Cons: Weaker brand governance and cross-team workflows (varies by tool); design ecosystem depth varies.</li>
+</ul>
+</li>
+<li>Avatar/localization (Synthesia, HeyGen):<ul>
+<li>Pros: Scalable talking-head content; strong localization capabilities.</li>
+<li>Cons: Narrow format; authenticity concerns; less flexible design/storytelling.</li>
+</ul>
+</li>
+<li>Pro suites with AI (Adobe Premiere, DaVinci Resolve):<ul>
+<li>Pros: Highest control and quality for professionals.</li>
+<li>Cons: Steep learning curve; slower time-to-value for non-editors.</li>
+</ul>
+</li>
+<li>Web design suites (Canva, Visme, others):<ul>
+<li>Pros: Template-first, brand kits, collaboration, multi-asset campaign creation.</li>
+<li>Cons: Historically less advanced motion/gen fidelity vs frontier labs; must prove reliability at scale.</li>
+</ul>
+</li>
+<li>What users value most today:</li>
+<li>Speed-to-value: reducing creation from hours to minutes with acceptable quality.</li>
+<li>On-brand consistency: outputs aligned to brand kits and reusable templates.</li>
+<li>Collaboration &amp; governance: comments, approvals, roles, version control.</li>
+<li>Multi-language &amp; accessibility: translate, dub, caption with quality controls.</li>
+<li>Distribution: 1-click resize/publish; channel-optimized exports; performance guidance.</li>
+<li>Risks and watchouts:</li>
+<li>IP/deepfake misuse → demand for watermarking, provenance, consent flows.</li>
+<li>Quality variance → reliance on prompting, references, and human-in-the-loop editing.</li>
+<li>Regulatory divergence (e.g., EU AI rules) → need for transparent labeling and admin controls.</li>
+</ul>
+<h2>3) Implications for Canva’s Announcement and Positioning</h2>
+<ul>
+<li>Core message: “From idea to on‑brand video in minutes—generate drafts, refine with AI, translate for any market, and publish everywhere, all in Canva.”</li>
+<li>Proof points to highlight:</li>
+<li>Prompt-to-draft storyboards and rough cuts; rich template library.</li>
+<li>Auto-captions, translate/dub workflows; accessible subtitle styling.</li>
+<li>Brand kit enforcement and locked templates for teams; approvals and versioning.</li>
+<li>Smart resize for channels; safe zones; direct publishing integrations.</li>
+<li>Safety and provenance: watermarking/labels for AI-generated clips; consent-based voice; brand-safe filters.</li>
+<li>Differentiation vs key alternatives:</li>
+<li>Versus gen-video labs: More control, brand-safe, team-ready, integrated design-to-distribution workflow.</li>
+<li>Versus social editors: Stronger brand governance, multi-asset campaigns, enterprise collaboration.</li>
+<li>Versus avatar tools: Broader creative canvas beyond talking-head; integrated design system.</li>
+<li>Versus pro suites: Faster time-to-value for non-editors; guardrails; templates; collaboration.</li>
+<li>Go-to-market levers:</li>
+<li>Freemium to Pro funnel: Limited gen minutes with watermark on Free; Pro/Teams remove watermark, unlock higher quality/duration, and add collaboration/governance.</li>
+<li>Industry-specific launch templates and “month-of-content” kits for SMB verticals.</li>
+<li>Education via “From prompt to publish” live streams; creator partnerships; co-marketing with SMB SaaS.</li>
+<li>Case studies demonstrating reduction in time-to-first-export and increased output cadence.</li>
+</ul>
+<h2>4) Recommended Success Metrics (90-Day)</h2>
+<ul>
+<li>Adoption: AI video projects started; export rate; D30 repeat creation; feature-specific usage (translate/dub, resize).</li>
+<li>Monetization: Pro conversion uplift among video users; Teams trials from video collaboration; credit pack attach (if applicable).</li>
+<li>Engagement/Quality: Time-to-first-export; steps saved; CSAT/NPS; render reliability; safety complaint rate.</li>
+<li>Distribution: Publish/share rate; template reuse; channel-specific export mix.</li>
+</ul>
+<h2>5) Assumptions and Constraints</h2>
+<ul>
+<li>Knowledge cutoff Oct 2024; trends and competitive notes reflect market state through that period and logical 2025 extensions.</li>
+<li>Assumed Canva capabilities as listed may vary at launch; messaging should align to delivered features and regional policy requirements.</li>
+</ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        

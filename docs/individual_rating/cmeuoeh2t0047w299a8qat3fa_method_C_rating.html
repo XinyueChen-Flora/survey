@@ -1,0 +1,463 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Method C Evaluation</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --border: 214.3 31.8% 91.4%;
+            --radius: 0.5rem;
+            --blue: 217 91% 60%;
+            --blue-foreground: 222.2 84% 4.9%;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 95%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--blue));
+            color: hsl(var(--blue-foreground));
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .task-context {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 1rem auto 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .current-task {
+            font-size: 1.125rem;
+            color: hsl(var(--blue));
+            margin-bottom: 0.5rem;
+        }
+        
+        .reference-task {
+            font-size: 1rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 1rem;
+        }
+        
+        .evaluation-goal {
+            font-size: 1rem;
+            color: hsl(var(--foreground));
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .evaluation-criteria {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        
+        .evaluation-criteria h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .criteria-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .criteria-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .criteria-list strong {
+            color: hsl(var(--primary));
+            font-weight: 600;
+        }
+        
+        .comparison-container {
+            margin-bottom: 4rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+        
+        .reference-card,
+        .method-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .reference-header {
+            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, hsl(var(--blue) / 0.1) 0%, hsl(var(--blue) / 0.05) 100%);
+        }
+        
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .task-label {
+            background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.8) 100%);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--secondary-foreground));
+            margin: 0;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .card-content h1,
+        .card-content h2,
+        .card-content h3,
+        .card-content h4,
+        .card-content h5,
+        .card-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content h1:first-of-type,
+        .card-content h2:first-of-type,
+        .card-content h3:first-of-type,
+        .card-content h4:first-of-type,
+        .card-content h5:first-of-type,
+        .card-content h6:first-of-type {
+            margin-top: 0;
+        }
+        
+        .card-content h1 { font-size: 1.5rem; }
+        .card-content h2 { font-size: 1.25rem; }
+        .card-content h3 { font-size: 1.125rem; }
+        .card-content h4 { font-size: 1rem; }
+        
+        .card-content p {
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content ul,
+        .card-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .card-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content em {
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .card-content blockquote {
+            border-left: 4px solid hsl(var(--border));
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="method-badge">Method C</div>
+            <h1>Method C Evaluation</h1>
+            <div class="task-context">
+                <p class="current-task"><strong>Current Task:</strong> Canva's New AI Video Editor</p>
+                <p class="reference-task"><strong>Reference Task:</strong> Notion's New AI Database Assistant Feature</p>
+                <p class="evaluation-goal">Evaluate how well this AI method adapted the expert's approach to the new task context.</p>
+            </div>
+            
+            <div class="evaluation-criteria">
+                <h3>Evaluation Criteria</h3>
+                <ul class="criteria-list">
+                    <li><strong>Overall Quality:</strong> Rate the effectiveness and completeness of this adaptation</li>
+                    <li><strong>Task Relevance:</strong> How well does this address the new context?</li>
+                    <li><strong>Coherence:</strong> Assess the logical flow and consistency</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="comparison-container">
+            <div class="comparison-grid">
+                <div class="reference-card">
+                    <div class="card-header reference-header">
+                        <h2>📄 Original Expert Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Notion's New AI Database Assistant Feature</div>
+                        <div class="content-wrapper">
+                            <p><strong>Blog Post Draft: Notion’s New AI Database Assistant — Turning Your Team’s Knowledge into Action</strong></p>
+<hr />
+<p>Three years into the so‑called “AI revolution,” something strange has happened: many of us are still drowning in information. We’ve added countless apps to our stacks, plug in a new AI subscription every few months, and yet—teams are still hunting for answers in old meeting notes, copy‑pasting between tools, and spending hours writing status updates no one has time to read.</p>
+<p>This isn’t just inefficient—it’s exhausting.</p>
+<p>At Notion, we’ve listened closely to what leaders, product managers, and operations teams are saying. In our customer research, “integrating AI” has now overtaken “hiring talent” as the number‑one business challenge. The root of the problem? Most AI tools live <em>outside</em> your workflow. They have zero context about your company’s processes, your projects, or the way you organize information. Which means they can’t help you in the moments that matter.</p>
+<p>With the new <strong>Notion AI Database Assistant</strong>, that changes.</p>
+<hr />
+<h3>From Passive Knowledge to Active Intelligence</h3>
+<p>Imagine opening a project database in Notion and having an assistant that knows not just what’s in the table, but what’s behind it: every linked doc, goal, deliverable, and stakeholder note. It can summarize thousands of rows instantly, spot patterns in your progress, suggest next steps, and even draft updates—all without you having to leave the page.</p>
+<p>This isn’t just “ChatGPT dropped into your workspace.” It’s AI woven into the very fabric of your team’s knowledge base, acting on the same information you use to make decisions. When your data changes, so does its understanding. When a new teammate joins, they inherit not just the information, but the intelligence layered over it.</p>
+<hr />
+<h3>Why We’re Launching This Now</h3>
+<p>The timing is no accident. Across the industry, we’re seeing a shift from generic AI models toward <strong>context‑rich, embedded AI</strong>:</p>
+<ul>
+<li><strong>No‑code/low‑code adoption is skyrocketing</strong> — 2025 trend reports show these platforms are breaking barriers for business users, enabling them to build without engineering bottlenecks. Embedding AI into these platforms, as we’ve done in Notion databases, means more people can adapt tools to the way they actually work.</li>
+<li><strong>Knowledge management is becoming intelligent</strong> — Analysts note that systems are evolving from static repositories into dynamic ecosystems that <em>proactively</em> surface insights. Teams no longer just “store” information; they expect their tools to connect the dots for them.</li>
+<li><strong>Competitors are racing to redefine workflows</strong> — Airtable has relaunched as an “AI‑native app platform” aiming to automate work at scale. monday.com has made AI core to their “Work Execution Era” with assistants like monday sidekick. These moves validate the market need—but they also reveal a gap: deep, contextually‑aware AI inside the flexible, all‑in‑one workspace that millions already use.</li>
+</ul>
+<p>Notion’s strength has always been that your docs, projects, and databases live side by side, deeply linked. Now, AI can move fluidly through that graph of connected knowledge—making sense of it faster than any human could.</p>
+<hr />
+<h3>Real‑World Stories: The Busywork Breakthrough</h3>
+<p>Meet <strong>Ravi</strong>, a product manager at a fast‑growing SaaS company. Before the AI Database Assistant, his week looked like this: an hour every Monday gathering metrics from multiple tables; Wednesday afternoons spent writing a “state of the project” update by copy‑pasting data into slides; Friday evenings tracking down blockers across teams before leadership sync.</p>
+<p>Now? The AI Database Assistant:</p>
+<ul>
+<li>Generates a project status summary, complete with risks and next steps, in under a minute.</li>
+<li>Flags patterns in customer feedback linked to the release database.</li>
+<li>Prepares stakeholder updates that pull from multiple linked workspaces, ready to share.</li>
+</ul>
+<p>Ravi estimates he’s reclaimed <strong>five to seven hours a week</strong>—time he now invests in roadmap planning and user interviews.</p>
+<p>Multiply that across every project lead in the company, and you’re not just saving time—you’re compounding your team’s ability to execute.</p>
+<hr />
+<h3>What Makes the Notion AI Database Assistant Different</h3>
+<ol>
+<li>
+<p><strong>Deep Context Awareness</strong><br />
+   It understands your content holistically—pages, databases, relationships—without exporting data or breaking privacy boundaries.</p>
+</li>
+<li>
+<p><strong>Embedded in Your Existing Workflow</strong><br />
+   No separate logins, no juggling tabs. AI features live right where the work happens.</p>
+</li>
+<li>
+<p><strong>Customizable &amp; No‑Code Friendly</strong><br />
+   Integrated with Notion’s existing no‑code flexibility, so you can tailor prompts, views, and outputs without engineering.</p>
+</li>
+<li>
+<p><strong>Transparent &amp; Private</strong><br />
+   Your data stays in your workspace. AI outputs are explainable and easy to refine.</p>
+</li>
+</ol>
+<hr />
+<h3>Proof Points That Matter</h3>
+<p>We’re not the only ones who believe embedded AI is the future:</p>
+<ul>
+<li><strong>72%</strong> of enterprises in a recent industry survey said AI will be “much more effective” when integrated directly into their systems of record, rather than as standalone tools.  </li>
+<li>Adoption of no‑code/low‑code platforms is growing at <strong>20%+ annually</strong> (Quixy, 2025 trends), driven by demand for accessible, customizable solutions.  </li>
+<li>Knowledge management experts predict that by the end of 2025, <strong>over half of enterprise KM systems</strong> will include proactive AI assistants to surface relevant content without explicit search.</li>
+</ul>
+<p>With Notion AI Database Assistant, we’re delivering on these predictions—right inside the tool your team already relies on.</p>
+<hr />
+<h3>The Bigger Picture: The Human Side of AI at Work</h3>
+<p>There’s a bigger story here than just productivity. When you strip away the repetitive, low‑judgment work, you give people back the mental space for creativity, problem‑solving, and connection.</p>
+<p>Airtable’s CEO calls their AI vision “the magic of vibe coding.” monday.com talks about a “Work Execution Era.” We agree that AI heralds a new era—but for us, the core is a more <em>human</em> one: helping teams spend more time on the work that only humans can do.</p>
+<p>The Notion AI Database Assistant doesn’t replace judgment. It replaces the tedious scaffolding around it: the status checks, the data wrangling, the manual cross‑referencing. You still decide what matters—AI just gets you to that moment of decision faster.</p>
+<hr />
+<h3>How to Get Started</h3>
+<p>If your team already uses Notion databases, the AI Database Assistant is available now in the workspace menu. Start with a simple use case: have it summarize your most active project table. Or get more ambitious: ask it to compare quarterly OKR progress across departments and suggest areas of focus.</p>
+<p>Whatever you choose, you’ll see immediately what it means to have your team’s <em>collective knowledge</em> working for you—not sitting idle in rows and columns.</p>
+<hr />
+<h3>Closing</h3>
+<p>The AI hype cycle has been noisy. But beneath it, a real transformation is taking place: the evolution of our tools from passive storage systems to active collaborators.</p>
+<p>The Notion AI Database Assistant is our step into that future. It’s AI with the full context of your work—ready to analyze, surface, and suggest, so your team can move from knowledge to action without losing a beat.</p>
+<p>If you’ve ever</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="card-header method-header">
+                        <h2>🔄 Method C Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Canva's New AI Video Editor</div>
+                        <div class="content-wrapper">
+                            <h1>Blog Post Draft: Introducing Canva’s New AI Video Editor — From Idea to On‑Brand Video in Minutes</h1>
+<p>If your team needs more video, you’re not alone. Social feeds, product launches, internal updates—everything performs better when it moves. But the reality is familiar: creative bottlenecks, siloed tools, and a mountain of edits that keep campaigns from shipping on time.</p>
+<p>That changes today with Canva’s new AI Video Editor.</p>
+<h2>Why now: AI video is having a moment—for everyone, not just pros</h2>
+<p>Over the past year, generative video models have taken big leaps forward, with widely discussed releases and announcements from industry leaders. At the same time, AI-assisted editing—auto-captions, smart trimming, beat syncing—has become a baseline expectation for fast, high-quality publishing. And as more brands adopt AI, requirements around governance, licensing, and brand safety have moved center stage.</p>
+<p>We built Canva’s AI Video Editor to bring these threads together: the creativity of next-gen generation, the practicality of assistive editing, and the reliability of brand guardrails—inside the design platform your team already uses.</p>
+<h2>What makes Canva different</h2>
+<ul>
+<li>Create inside a complete design system: Your brand kits, fonts, colors, and approved assets are built into every step. Start with a storyboard, a script, a presentation—or a blank canvas—and stay in one tool from concept to publish.</li>
+<li>AI that keeps you in control: Turn scripts into scenes, suggest B-roll and transitions, auto-sync to music, add captions and translations—then refine on an editable timeline. Prompt in natural language (“make this 15 seconds, vertical, upbeat; keep the product hero in the first three seconds”) and adjust scene-by-scene.</li>
+<li>Variant at scale: With Magic Switch, instantly adapt your video to platform specs and durations. Generate multiple hooks, CTAs, and thumbnail options. Localize captions and voiceover in a few clicks while preserving your brand tone and styles.</li>
+<li>Team-ready by default: Co-edit in real time, leave comments, request approvals, and publish together. Tap into shared libraries and templates so everyone builds on the same foundation.</li>
+<li>Rights-aware by design: Connect to licensed stock, use brand-safe effects, and apply content provenance signals where available—all to help your team create confidently.</li>
+</ul>
+<h2>From script to social—fast</h2>
+<p>Here’s how a typical flow works:
+1) Start with what you have: Paste a launch script, add a few brand images, or pull slides from a presentation. Choose a template or let Magic Design suggest layouts that fit your message and audience.
+2) Assemble with AI: Generate a first cut with scene timing, B-roll suggestions, transitions, captions, and music. Ask the editor to “tighten to 20 seconds for Reels, keep logo outro” or “add upbeat music and cut to the beat.”
+3) Fine-tune creatively: Tweak text, swap stock, adjust pacing on the timeline, and nudge motion graphics. Everything is editable—no black box.
+4) Scale with variants: Use Magic Switch to create platform-specific versions (TikTok, Shorts, LinkedIn). Generate alternative hooks and CTAs for testing. Add localized captions and voiceover for new regions.
+5) Review and publish: Share for feedback, track comments, and export directly or hand off to your social scheduler.</p>
+<p>A day in the life: The marketer who ships more
+Meet Maya, a social marketer prepping a product update. In the past, she needed a videographer, multiple tools, and a week of back-and-forth to produce an on-brand video set.</p>
+<p>With Canva’s AI Video Editor, she turns a one-paragraph script into:
+- A 20-second Reels teaser, vertical, with dynamic captions and beat-synced transitions.
+- A 45-second LinkedIn cut with product overlays and a “Request a demo” CTA.
+- Localized versions with translated captions for three regions.
+- Three thumbnail options and two alternate hooks for A/B testing.</p>
+<p>By lunch, the campaign is ready for review. By end of day, it’s scheduled across channels—consistent, on-brand, and built for performance.</p>
+<h2>Designed for how teams really work</h2>
+<ul>
+<li>For creators and SMBs: Go from idea to polished video without a learning curve. Templates and AI assists let you move fast and look pro.</li>
+<li>For marketing teams: Build content systems—templates, variant sets, and brand kits—that scale across markets and moments.</li>
+<li>For enterprises: Get collaboration and governance—approvals, permissions, asset libraries, and content provenance signals—so every publish is a confident one.</li>
+</ul>
+<h2>How we think about AI, creativity, and control</h2>
+<p>We believe AI should accelerate your creativity, not replace your judgment. That’s why every generated choice in Canva is editable, reversible, and tied to your brand standards. You stay in the driver’s seat; AI handles the repetitive scaffolding—timings, captions, variants—so you can focus on the story.</p>
+<h2>Try it today</h2>
+<p>Open the Video tab in Canva and choose “Start with AI.” Paste a script or pick a template. Ask the editor to “make this a 15-second vertical launch teaser with bold captions,” then refine the first cut. Use Magic Switch to create platform versions and publish.</p>
+<p>Your audience is watching. Now your team can ship more, worry less—and make every message move.</p>
+<p>—</p>
+<h2>High-level market context referenced</h2>
+<ul>
+<li>Rapid advances in text-to-video models have raised quality and creative possibilities.</li>
+<li>AI-assisted editing features are now mainstream expectations for faster publishing.</li>
+<li>Teams need brand-safe, licensed, and governable creative pipelines.</li>
+<li>The winners will combine generation, editing control, brand systems, and collaboration to deliver speed and scale.</li>
+</ul>
+<h2>Call to action</h2>
+<ul>
+<li>Try the new AI Video Editor with a simple script-to-video project.</li>
+<li>Explore Brand Kits and templates to lock in your visual identity.</li>
+<li>Use Magic Switch to produce a platform-ready variant set in minutes.</li>
+</ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        

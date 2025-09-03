@@ -1,0 +1,439 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Method B Evaluation</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --border: 214.3 31.8% 91.4%;
+            --radius: 0.5rem;
+            --blue: 217 91% 60%;
+            --blue-foreground: 222.2 84% 4.9%;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 95%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--blue));
+            color: hsl(var(--blue-foreground));
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .task-context {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 1rem auto 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .current-task {
+            font-size: 1.125rem;
+            color: hsl(var(--blue));
+            margin-bottom: 0.5rem;
+        }
+        
+        .reference-task {
+            font-size: 1rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 1rem;
+        }
+        
+        .evaluation-goal {
+            font-size: 1rem;
+            color: hsl(var(--foreground));
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .evaluation-criteria {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        
+        .evaluation-criteria h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .criteria-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .criteria-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .criteria-list strong {
+            color: hsl(var(--primary));
+            font-weight: 600;
+        }
+        
+        .comparison-container {
+            margin-bottom: 4rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+        
+        .reference-card,
+        .method-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .reference-header {
+            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, hsl(var(--blue) / 0.1) 0%, hsl(var(--blue) / 0.05) 100%);
+        }
+        
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .task-label {
+            background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.8) 100%);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--secondary-foreground));
+            margin: 0;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .card-content h1,
+        .card-content h2,
+        .card-content h3,
+        .card-content h4,
+        .card-content h5,
+        .card-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content h1:first-of-type,
+        .card-content h2:first-of-type,
+        .card-content h3:first-of-type,
+        .card-content h4:first-of-type,
+        .card-content h5:first-of-type,
+        .card-content h6:first-of-type {
+            margin-top: 0;
+        }
+        
+        .card-content h1 { font-size: 1.5rem; }
+        .card-content h2 { font-size: 1.25rem; }
+        .card-content h3 { font-size: 1.125rem; }
+        .card-content h4 { font-size: 1rem; }
+        
+        .card-content p {
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content ul,
+        .card-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .card-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content em {
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .card-content blockquote {
+            border-left: 4px solid hsl(var(--border));
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="method-badge">Method B</div>
+            <h1>Method B Evaluation</h1>
+            <div class="task-context">
+                <p class="current-task"><strong>Current Task:</strong> Slack's New AI Meeting Summarizer Feature</p>
+                <p class="reference-task"><strong>Reference Task:</strong> Canva's New AI Video Editor</p>
+                <p class="evaluation-goal">Evaluate how well this AI method adapted the expert's approach to the new task context.</p>
+            </div>
+            
+            <div class="evaluation-criteria">
+                <h3>Evaluation Criteria</h3>
+                <ul class="criteria-list">
+                    <li><strong>Overall Quality:</strong> Rate the effectiveness and completeness of this adaptation</li>
+                    <li><strong>Task Relevance:</strong> How well does this address the new context?</li>
+                    <li><strong>Coherence:</strong> Assess the logical flow and consistency</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="comparison-container">
+            <div class="comparison-grid">
+                <div class="reference-card">
+                    <div class="card-header reference-header">
+                        <h2>📄 Original Expert Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Canva's New AI Video Editor</div>
+                        <div class="content-wrapper">
+                            <p>Here’s a consolidated set of <strong>SEO keyword targets</strong>, <strong>subhead ideas</strong>, and <strong>distribution channel recommendations</strong> designed to maximize the reach and performance of your Canva AI Video Editor launch blog.</p>
+<hr />
+<h2><strong>High-Value SEO Keyword Suggestions</strong></h2>
+<p>Blend <strong>primary (high-intent)</strong> and <strong>secondary (supporting/long-tail)</strong> keywords to capture both broad searches and niche queries:</p>
+<p><strong>Primary / High-Volume Targets:</strong>
+- Canva AI Video Editor<br />
+- AI video editing tool<br />
+- Best AI video generator<br />
+- Online AI video editor<br />
+- AI-powered video creation  </p>
+<p><strong>Secondary / Long-Tail Targets:</strong>
+- How to make videos with Canva AI<br />
+- AI tools for marketers / creators<br />
+- AI video editing for social media<br />
+- Beginner-friendly AI video editor<br />
+- Canva vs Adobe Express AI<br />
+- Free AI video editor online  </p>
+<p>Why: These balance competitive, high-traffic phrases (to drive discoverability) with intent-driven, lower-volume queries (to capture motivated users searching solutions Canva excels in).</p>
+<hr />
+<h2><strong>Punchy &amp; SEO-Friendly Subhead Ideas</strong></h2>
+<p>These work as <strong>H2/H3s</strong> within your blog to boost readability, scannability, and keyword integration:</p>
+<ol>
+<li><strong>The AI Video Boom: Why Now’s the Moment to Create Smarter</strong>  </li>
+<li><strong>From Idea to Impact: How Canva’s AI Video Editor Works</strong>  </li>
+<li><strong>Edit Like a Pro — No Experience Required</strong>  </li>
+<li><strong>5 Ways AI Video Editing Elevates Your Content Game</strong>  </li>
+<li><strong>Competing in the AI Video Space: What Sets Canva Apart</strong>  </li>
+<li><strong>Your Gateway to Scalable, On-Brand Video Creation</strong>  </li>
+<li><strong>See It to Believe It: Try Canva’s AI Video Editor Today</strong></li>
+</ol>
+<hr />
+<h2><strong>Top Distribution Channels to Maximize Reach</strong></h2>
+<p>Leverage a three-pronged Owned / Earned / Paid approach:</p>
+<p><strong>Owned Channels:</strong>
+- Canva Blog — SEO-optimized article with embedded product demo video<br />
+- Email Newsletters — segmented sends to creators, marketers, educators, SMBs<br />
+- Social Media — LinkedIn carousel posts (market trend + feature highlights), Instagram Reels/TikTok showcasing “before and after” AI edits, YouTube Shorts for quick demos<br />
+- Canva Design School — AI Video Editor “How-to” course or tutorial</p>
+<p><strong>Earned / Partnership:</strong>
+- Press Outreach — tech media (TechCrunch, The Verge), design/marketing publications<br />
+- Influencer Collabs — partner with content creators on YouTube/TikTok to produce tutorials/reactions<br />
+- Community Engagement — Canva Creators Program, Reddit AMA in design/video editing subreddits</p>
+<p><strong>Paid Channels:</strong>
+- Google Search Ads targeting high-intent keywords (e.g., “online AI video editor”)<br />
+- Paid Social — Meta/Instagram/TikTok ads using captivating video snippets made in the editor<br />
+- LinkedIn Sponsored Posts for B2B targeting (marketing, comms, edu, startup sectors)<br />
+- Native Ads in creative/tech industry newsletters</p>
+<hr />
+<p><strong>Pro tip for amplification:</strong><br />
+Pair <strong>data-backed headlines</strong> (“AI Video Market to Hit $2B by 2030 — Here’s How Canva Is Leading the Charge”) with <strong>visual-first content snippets</strong> from the AI Video Editor to tease the tool’s capabilities. This lends both authority and shareability.</p>
+<hr />
+<p>If you’d like, I can also map these keywords and subheads to an <strong>SEO content outline</strong> so your launch blog is structurally optimized for discoverability and conversion. Would you like me to create that next?</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="card-header method-header">
+                        <h2>🔄 Method B Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Slack's New AI Meeting Summarizer Feature</div>
+                        <div class="content-wrapper">
+                            <p>Here’s a high-level snapshot of the workplace AI landscape to frame Slack’s AI Meeting Summarizer announcement:</p>
+<h2>1) Strong, Sustained Growth Outlook</h2>
+<ul>
+<li>Accelerating enterprise GenAI adoption: Analyst outlooks indicate rapid spending growth on GenAI solutions through 2027+, with most large organizations piloting or deploying GenAI-powered assistants embedded in daily tools.</li>
+<li>Collaboration suites are the tip of the spear: Productivity platforms (Microsoft 365, Google Workspace, Zoom, Slack) are converging on AI copilots that summarize meetings, generate recaps, and surface action items—driving mainstream exposure and normalized usage.</li>
+<li>Speech/voice tech maturity: Ongoing improvements in speech recognition, diarization, and language models underpin higher-fidelity meeting transcripts—enabling more precise summaries and action extraction across accents, domains, and environments.</li>
+</ul>
+<h2>2) Key Adoption Drivers</h2>
+<ul>
+<li>Meeting overload and time scarcity: Hybrid/remote work expanded the number and length of meetings; teams need fast, reliable ways to catch up asynchronously without replaying recordings.</li>
+<li>Shift to async collaboration: Summaries, decisions, and action items need to be consumable in channels/threads where teams already coordinate—reducing reliance on synchronous attendance.</li>
+<li>Actionability &gt; archives: Users want more than notes; they need well-structured outcomes (owners, deadlines, decisions) that feed tasks, tickets, and follow-ups automatically.</li>
+<li>Trust, privacy, and compliance: Enterprise buyers require clear data boundaries, admin controls, region-specific data handling, and auditability—especially under emerging regulations (e.g., EU AI Act).</li>
+<li>Multilingual, accessible work: Global teams need language support, translation, and accessibility features (captions, speaker attribution) to keep work inclusive and searchable.</li>
+</ul>
+<h2>3) Notable Workplace AI Trends (2024–2030)</h2>
+<ul>
+<li>From “generic recap” to “context-aware intelligence”: Best-in-class tools enrich meeting summaries with relevant channel history, documents, and recent decisions, producing concise, useful recaps that reflect the project’s reality—not just the last 30 minutes of audio.</li>
+<li>Outcome-first summaries: AI outputs will standardize key fields—goals discussed, decisions made, risks/blocks, owners, due dates—and auto-publish them to the right channels, tasks, and calendars.</li>
+<li>Human-in-the-loop by default: Practical controls—approve/edit before posting, request clarifications, tag owners—build trust and increase adoption; teams prefer steerable AI, not black-box recaps.</li>
+<li>Multi-modal capture: Summarizers incorporate slides, shared docs, whiteboards, and chat alongside audio/video; visual artifacts get referenced in-line, boosting clarity.</li>
+<li>Governance and data controls: IT needs granular admin policies (which meetings can be summarized, retention windows, who can view, consent workflows, regional processing). “Enterprise-grade” will be a purchasing filter.</li>
+<li>Cross-tool interoperability: Buyers want summarization that works across Zoom, Google Meet, Teams, and recorded huddles—and lands results where teams execute (Slack channels, project tools, CRM, ticketing).</li>
+<li>Measurable ROI: Teams will expect tangible outcomes—reduced meeting time, faster onboarding, higher action completion rates, lower duplication—and will use these metrics to justify renewals/expansion.</li>
+</ul>
+<h2>4) Competitive Landscape (What Users See Today)</h2>
+<ul>
+<li>Microsoft Copilot for Teams: Meeting Recap, speaker timelines, AI notes, follow-ups tied to M365 apps; strong if fully standardized on Microsoft, but less flexible across non-Microsoft workflows.</li>
+<li>Google Meet + Gemini for Workspace: Auto summaries, action suggestions within Google ecosystem; favors organizations heavily invested in Workspace.</li>
+<li>Zoom AI Companion: Live note-taking, summaries, and next steps integrated in Zoom; best for Zoom-first environments but requires downstream workflow integrations.</li>
+<li>Specialized meeting intelligence (Otter.ai, Fireflies.ai, Avoma, Fathom, Supernormal): Strong transcription and recap features with conversation intelligence; often require manual export/posting and may sit outside team hubs where actions happen.</li>
+</ul>
+<h2>Strategic Implications for Slack’s AI Meeting Summarizer Launch</h2>
+<ul>
+<li>Frame it as “From meetings to outcomes—in the flow of work”: Slack can uniquely deliver summaries where coordination already happens (channels/DMs), turning recaps into immediate, visible team action.</li>
+<li>Differentiate on context-awareness: Position summaries that incorporate relevant channel history, linked docs, and prior decisions to produce higher-signal outputs vs. generic note dumps.</li>
+<li>Emphasize actionability and automation: Auto-extract decisions, owners, and due dates; one-click convert to tasks/tickets (e.g., Jira, Asana, ServiceNow), schedule follow-ups, or trigger Slack workflows—moving beyond passive summaries.</li>
+<li>Lead with enterprise trust: Highlight Slack’s security posture, data isolation, admin controls, retention, consent, data residency options, and compliance alignment—clear advantages for regulated industries.</li>
+<li>Open by design: Work across the tools customers already use (Zoom, Google Meet, Teams recordings) and post structured outputs consistently in Slack—reducing vendor lock-in concerns.</li>
+<li>Target high-velocity adopters:</li>
+<li>Sales and Customer Success: Auto-post call recaps to deal channels, route next steps to CRM/tasks.</li>
+<li>Product and Engineering: Summarize standups/reviews, capture decisions, log action items to issue trackers.</li>
+<li>Recruiting and HR: Summarize interviews and hiring debriefs, standardize feedback, track next steps.</li>
+<li>Support and Services: Turn customer escalations into actionable tasks with owner/due date directly in Slack.</li>
+<li>Proof themes for announcement:</li>
+<li>Speed to clarity: Catch up on any meeting in under a minute.</li>
+<li>Better than attendance: Async participation without missing context.</li>
+<li>Measurable impact: Fewer duplicative meetings, faster decision-making, higher action completion rates.</li>
+<li>Built for IT: Configurable policies, scoped access, and auditability from day one.</li>
+</ul>
+<p>If helpful, I can next map Slack’s AI Meeting Summarizer feature set against Microsoft Copilot for Teams, Google Meet/Gemini, Zoom AI Companion, and leading specialists to sharpen competitive positioning and messaging for the launch.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        

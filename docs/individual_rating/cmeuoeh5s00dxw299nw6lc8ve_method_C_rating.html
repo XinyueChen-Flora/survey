@@ -1,0 +1,443 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Method C Evaluation</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --border: 214.3 31.8% 91.4%;
+            --radius: 0.5rem;
+            --blue: 217 91% 60%;
+            --blue-foreground: 222.2 84% 4.9%;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 95%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--blue));
+            color: hsl(var(--blue-foreground));
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .task-context {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 1rem auto 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .current-task {
+            font-size: 1.125rem;
+            color: hsl(var(--blue));
+            margin-bottom: 0.5rem;
+        }
+        
+        .reference-task {
+            font-size: 1rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 1rem;
+        }
+        
+        .evaluation-goal {
+            font-size: 1rem;
+            color: hsl(var(--foreground));
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .evaluation-criteria {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        
+        .evaluation-criteria h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .criteria-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .criteria-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .criteria-list strong {
+            color: hsl(var(--primary));
+            font-weight: 600;
+        }
+        
+        .comparison-container {
+            margin-bottom: 4rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+        
+        .reference-card,
+        .method-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .reference-header {
+            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, hsl(var(--blue) / 0.1) 0%, hsl(var(--blue) / 0.05) 100%);
+        }
+        
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .task-label {
+            background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.8) 100%);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--secondary-foreground));
+            margin: 0;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .card-content h1,
+        .card-content h2,
+        .card-content h3,
+        .card-content h4,
+        .card-content h5,
+        .card-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content h1:first-of-type,
+        .card-content h2:first-of-type,
+        .card-content h3:first-of-type,
+        .card-content h4:first-of-type,
+        .card-content h5:first-of-type,
+        .card-content h6:first-of-type {
+            margin-top: 0;
+        }
+        
+        .card-content h1 { font-size: 1.5rem; }
+        .card-content h2 { font-size: 1.25rem; }
+        .card-content h3 { font-size: 1.125rem; }
+        .card-content h4 { font-size: 1rem; }
+        
+        .card-content p {
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content ul,
+        .card-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .card-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content em {
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .card-content blockquote {
+            border-left: 4px solid hsl(var(--border));
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="method-badge">Method C</div>
+            <h1>Method C Evaluation</h1>
+            <div class="task-context">
+                <p class="current-task"><strong>Current Task:</strong> The Future of Work: Remote, AI, and Changing Careers</p>
+                <p class="reference-task"><strong>Reference Task:</strong> Healthy Aging: Latest Research on Longevity and Wellness</p>
+                <p class="evaluation-goal">Evaluate how well this AI method adapted the expert's approach to the new task context.</p>
+            </div>
+            
+            <div class="evaluation-criteria">
+                <h3>Evaluation Criteria</h3>
+                <ul class="criteria-list">
+                    <li><strong>Overall Quality:</strong> Rate the effectiveness and completeness of this adaptation</li>
+                    <li><strong>Task Relevance:</strong> How well does this address the new context?</li>
+                    <li><strong>Coherence:</strong> Assess the logical flow and consistency</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="comparison-container">
+            <div class="comparison-grid">
+                <div class="reference-card">
+                    <div class="card-header reference-header">
+                        <h2>📄 Original Expert Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Healthy Aging: Latest Research on Longevity and Wellness</div>
+                        <div class="content-wrapper">
+                            <p>Here’s a <strong>revised healthy aging guide</strong> rewritten for a general audience—clear, engaging, and practical—while keeping the key scientific principles intact.</p>
+<hr />
+<h2><strong>Your Healthy Aging Blueprint: Simple Steps Backed by Science</strong></h2>
+<p>We can’t change our genes, but decades of research—from studies of the world’s longest‑lived communities to clinical trials—shows we can influence how well we age through daily choices. The most powerful results come when nutrients, movement, connection, and preventive habits work together, not in isolation.</p>
+<hr />
+<h3><strong>1. Eat for Long‑Term Strength</strong></h3>
+<ul>
+<li><strong>Base meals on plants:</strong> Vegetables, fruits, beans, whole grains, nuts, and seeds provide fiber, antioxidants, and nutrients that support heart, brain, and immune health.</li>
+<li><strong>Go easy on processed foods and added sugars.</strong> These can speed the development of chronic diseases.</li>
+<li><strong>Include healthy proteins:</strong> Fish, legumes, and moderate dairy help maintain muscle as you age.</li>
+<li><strong>Add healthy fats:</strong> Olive oil, avocados, and oily fish help protect the heart.</li>
+<li><strong>Take inspiration from “Blue Zone” diets</strong>—Mediterranean and traditional Okinawan eating patterns are linked to longer lives.</li>
+</ul>
+<hr />
+<h3><strong>2. Move Every Day (and Mix It Up)</strong></h3>
+<ul>
+<li><strong>Aim for at least 150 minutes</strong> a week of moderate activity (e.g., brisk walking, cycling) or the equivalent in more vigorous exercise.</li>
+<li><strong>Work your muscles</strong> 2–3 times per week—bodyweight exercises, resistance bands, or weights maintain strength and prevent frailty.</li>
+<li><strong>Include balance and flexibility training</strong> to lower fall risk and improve mobility.</li>
+<li>Even short bouts of movement add up—choose stairs, stretch during TV breaks, take walking meetings.</li>
+</ul>
+<hr />
+<h3><strong>3. Stay Connected—Your Social Health Matters</strong></h3>
+<ul>
+<li>Regular contact with family, friends, or community groups <strong>lowers the risk of depression, cognitive decline, and even early death</strong>.</li>
+<li>Volunteer, join a club, attend faith‑based gatherings, or simply schedule regular conversations.</li>
+<li><strong>Avoid prolonged isolation</strong>—research suggests being socially cut off can age the body faster.</li>
+</ul>
+<hr />
+<h3><strong>4. Keep Your Mind Healthy</strong></h3>
+<ul>
+<li>Challenge your brain: read, learn new skills, play strategy games, or engage in creative hobbies.</li>
+<li>Manage stress with tools like deep breathing, mindfulness, or time in nature.</li>
+<li>Good sleep (7–9 hours) strengthens memory, mood, and immune function.</li>
+</ul>
+<hr />
+<h3><strong>5. Be Proactive with Preventive Care</strong></h3>
+<ul>
+<li><strong>Get regular check‑ups and screenings</strong> as recommended for your age and health status (e.g., blood pressure, cancer screenings, vision and hearing tests).</li>
+<li>Stay current with vaccinations to reduce risk of infections.</li>
+<li>Review medications with your healthcare provider to avoid harmful interactions.</li>
+</ul>
+<hr />
+<h3><strong>How It All Fits Together</strong></h3>
+<p>Think of healthy aging like a strong web:<br />
+- <strong>Nutrition</strong> fuels your body and supports exercise recovery.<br />
+- <strong>Exercise</strong> boosts mood and energy, making it easier to connect with others.<br />
+- <strong>Social engagement</strong> reduces stress and supports mental health, which helps you stick to healthy routines.<br />
+- <strong>Preventive care</strong> catches problems early, letting you maintain your activity and independence.  </p>
+<p>When combined, these habits reinforce each other—creating a much greater impact than any one alone.</p>
+<hr />
+<p><strong>Bottom line:</strong> You don’t have to do everything perfectly. Start small, be consistent, and keep adding healthy layers. Science shows that the sooner you start—at any age—the more years of vitality you can enjoy.</p>
+<hr />
+<p>If you'd like, I can also create a <strong>one‑page “Daily Healthy Aging Checklist”</strong> version of this guide, so it’s even easier to put into practice. Would you like me to prepare that next?</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="card-header method-header">
+                        <h2>🔄 Method C Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">The Future of Work: Remote, AI, and Changing Careers</div>
+                        <div class="content-wrapper">
+                            <p>Here’s a revised future‑of‑work guide rewritten for a general audience—clear, engaging, and practical—while keeping the key evidence‑based principles intact.</p>
+<h1>Your Future‑of‑Work Blueprint: Simple Steps Backed by What We’re Seeing Now</h1>
+<p>We can’t control every market cycle, but we can control how we work, learn, and show our impact. The biggest wins happen when your work setup, AI tools, and skills all reinforce each other.</p>
+<h2>1. Make Your Work Model Work for You</h2>
+<ul>
+<li>Set a weekly operating rhythm: plan on Monday, demo on Friday, share a written mid‑week update.</li>
+<li>Reduce meeting overload: default to async updates; protect two 2‑hour focus blocks daily.</li>
+<li>Build visibility with artifacts: keep a living doc or dashboard showing goals, progress, blockers, and decisions.</li>
+</ul>
+<h2>2. Get AI‑Fluent (Safely)</h2>
+<ul>
+<li>Learn one tool at a time: pick a core AI assistant and apply it to one workflow (e.g., research summary, code review, customer email drafts).</li>
+<li>Standardize your prompts: keep a small library; note what works; include context, constraints, and examples.</li>
+<li>Verify outputs: check sources, run small tests, and never paste sensitive data without policy approval.</li>
+</ul>
+<h2>3. Build a T‑Shaped Skill Portfolio</h2>
+<ul>
+<li>Every quarter, pick:</li>
+<li>One AI/data skill (e.g., spreadsheet AI functions, analytics basics, scripting).</li>
+<li>One power skill (e.g., storytelling with data, negotiation).</li>
+<li>One domain deepening (e.g., regulations in your industry).</li>
+<li>Show, don’t tell: create a small case study or repo for each new skill and link it in your resume/LinkedIn.</li>
+</ul>
+<h2>4. Protect Your Career from “Silent” Risks</h2>
+<ul>
+<li>Proximity bias: if you’re remote, schedule purposeful visibility—present in key meetings, volunteer for cross‑team demos, and rotate brief stakeholder check‑ins.</li>
+<li>Deskilling: ensure you own at least one high‑judgment step end‑to‑end (requirements, QA, client comms) so you grow with the tech.</li>
+<li>Data/IP: keep a clean record of what you trained on; respect company and client policies.</li>
+</ul>
+<h2>5. Scan for Opportunity (and Pay Attention to These Growth Areas)</h2>
+<ul>
+<li>AI/Tech: AI application engineering, data engineering/analytics, ML ops, AI product, AI governance/risk, cybersecurity.</li>
+<li>Climate/Energy: grid and building electrification, carbon accounting, sustainability reporting.</li>
+<li>Healthcare/Care: telehealth ops, care coordination, health data interoperability, behavioral health.</li>
+<li>Skilled Trades/Advanced Manufacturing: electricians, HVAC, robotics technicians, CNC, maintenance.</li>
+<li>Tech‑Enabled Operations and Customer: RevOps, CX with AI, digital marketing analytics.</li>
+</ul>
+<h2>6. For Managers and Teams (Short List)</h2>
+<ul>
+<li>Shift to outcomes: define clear deliverables, deadlines, and quality bars.</li>
+<li>Write it down: decisions, rationales, and workflows—so remote and onsite teammates stay aligned.</li>
+<li>Enable AI responsibly: give people safe sandboxes, playbooks, and policies; track impact and equity; celebrate reusable workflows.</li>
+<li>Grow from within: skills frameworks, internal gigs, and apprenticeships keep talent on the learning curve.</li>
+</ul>
+<h2>How It All Fits Together</h2>
+<ul>
+<li>Hybrid discipline (docs, async, outcomes) produces cleaner data and clearer goals.</li>
+<li>Clear goals and cleaner data make AI tools more reliable and useful.</li>
+<li>AI takes on routine work, freeing you to deliver higher‑value outcomes.</li>
+<li>Delivering visible, higher‑value outcomes builds your portfolio and network—opening doors to better roles and resilience in changing markets.</li>
+</ul>
+<p>Bottom line: Start small, be consistent, and keep your work visible. In the next 12–36 months, the people and teams who pair solid hybrid habits with practical AI fluency and steady skill growth will have the biggest edge.</p>
+<p>If you’d like, I can also create a one‑page “Weekly Future‑of‑Work Checklist” version of this guide and a role‑specific AI adoption playbook (e.g., for analysts, marketers, engineers). Would you like me to prepare that next?]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        

@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Method C Evaluation</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --border: 214.3 31.8% 91.4%;
+            --radius: 0.5rem;
+            --blue: 217 91% 60%;
+            --blue-foreground: 222.2 84% 4.9%;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 95%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: hsl(var(--blue));
+            color: hsl(var(--blue-foreground));
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .task-context {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 1rem auto 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .current-task {
+            font-size: 1.125rem;
+            color: hsl(var(--blue));
+            margin-bottom: 0.5rem;
+        }
+        
+        .reference-task {
+            font-size: 1rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 1rem;
+        }
+        
+        .evaluation-goal {
+            font-size: 1rem;
+            color: hsl(var(--foreground));
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .evaluation-criteria {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+        
+        .evaluation-criteria h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .criteria-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .criteria-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .criteria-list strong {
+            color: hsl(var(--primary));
+            font-weight: 600;
+        }
+        
+        .comparison-container {
+            margin-bottom: 4rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+        
+        .reference-card,
+        .method-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid hsl(var(--border));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .reference-header {
+            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, hsl(var(--blue) / 0.1) 0%, hsl(var(--blue) / 0.05) 100%);
+        }
+        
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .task-label {
+            background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.8) 100%);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--secondary-foreground));
+            margin: 0;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .card-content h1,
+        .card-content h2,
+        .card-content h3,
+        .card-content h4,
+        .card-content h5,
+        .card-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content h1:first-of-type,
+        .card-content h2:first-of-type,
+        .card-content h3:first-of-type,
+        .card-content h4:first-of-type,
+        .card-content h5:first-of-type,
+        .card-content h6:first-of-type {
+            margin-top: 0;
+        }
+        
+        .card-content h1 { font-size: 1.5rem; }
+        .card-content h2 { font-size: 1.25rem; }
+        .card-content h3 { font-size: 1.125rem; }
+        .card-content h4 { font-size: 1rem; }
+        
+        .card-content p {
+            margin-bottom: 1rem;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content ul,
+        .card-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .card-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+        }
+        
+        .card-content em {
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .card-content blockquote {
+            border-left: 4px solid hsl(var(--border));
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="method-badge">Method C</div>
+            <h1>Method C Evaluation</h1>
+            <div class="task-context">
+                <p class="current-task"><strong>Current Task:</strong> DocuSign's New AI Contract Analyzer Feature</p>
+                <p class="reference-task"><strong>Reference Task:</strong> Slack's New AI Meeting Summarizer Feature</p>
+                <p class="evaluation-goal">Evaluate how well this AI method adapted the expert's approach to the new task context.</p>
+            </div>
+            
+            <div class="evaluation-criteria">
+                <h3>Evaluation Criteria</h3>
+                <ul class="criteria-list">
+                    <li><strong>Overall Quality:</strong> Rate the effectiveness and completeness of this adaptation</li>
+                    <li><strong>Task Relevance:</strong> How well does this address the new context?</li>
+                    <li><strong>Coherence:</strong> Assess the logical flow and consistency</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="comparison-container">
+            <div class="comparison-grid">
+                <div class="reference-card">
+                    <div class="card-header reference-header">
+                        <h2>📄 Original Expert Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">Slack's New AI Meeting Summarizer Feature</div>
+                        <div class="content-wrapper">
+                            <p>Here’s a full 1,000‑word adoption‑driving blog post in a <strong>Slack‑style voice</strong>, blending our refined positioning, 2024 AI trend insights, audience targeting, and competitor comparison.</p>
+<hr />
+<h1>Meet Slack’s AI Meeting Summarizer: Instant Insights, Your Way</h1>
+<p>You know the feeling.<br />
+You step out of a meeting (virtual or otherwise) and… you’re already late to the next one. Your brain’s juggling action items, follow‑ups, and nuggets of brilliance—but the details? They’re slipping away.</p>
+<p>That’s where Slack’s <strong>AI Meeting Summarizer</strong> comes in.<br />
+It’s like your sharpest notetaking colleague, available 24/7, delivering instant, actionable recaps—right inside Slack—so you can move work forward without hitting pause.</p>
+<hr />
+<h2>Why now? The AI productivity shift is already here</h2>
+<p>According to Microsoft’s 2024 <em>Work Trend Index</em>, AI isn’t a “someday” tool—it’s reshaping work today. The St. Louis Fed’s recent survey found that nearly a third of U.S. workers are already using generative AI on the job. The problem? Most tools still live outside the actual flow of work. They force you to switch apps, interrupt your pace, or wade through cluttered dashboards.</p>
+<p>Our take: the next wave of productivity is about <strong>AI in context</strong>—smart assistance that shows up where you’re already collaborating, making you feel more in control, not less.</p>
+<p>That’s exactly why we built our AI Meeting Summarizer <em>into</em> Slack, alongside channels, workflows, huddles, and all your favorite integrations.</p>
+<hr />
+<h2>How it works (and why you’ll actually use it)</h2>
+<p>In classic Slack fashion, the AI Meeting Summarizer is designed for <em>you</em>—not some standardized “meeting minutes” template that disappears into your drive folder.</p>
+<ul>
+<li><strong>Join any meeting</strong>: Whether you’re in a Slack huddle or syncing from a connected calendar tool, the summarizer captures the key points in real time.</li>
+<li><strong>Instant recaps</strong>: Get your summary delivered in the channel, DM, or workflow of your choice—often before you’ve even closed your laptop.</li>
+<li><strong>Action‑ready highlights</strong>: Every recap strips away the fluff and flags decisions, action items, and blockers.</li>
+<li><strong>Stay in control</strong>: No auto‑publishing without your say‑so. You decide what gets shared, and with whom.</li>
+<li><strong>Integrates with your stack</strong>: Pipe action items straight into Jira, Asana, Trello, or Salesforce via Workflow Builder or APIs.</li>
+</ul>
+<p>It’s there when you miss a meeting—or when you’re in one and just want to focus on the conversation, not the keyboard.</p>
+<hr />
+<h2>Part of your Slack‑powered productivity toolkit</h2>
+<p>The summarizer is powerful on its own—but it levels up when you see it as part of a bigger toolkit:</p>
+<ul>
+<li><strong>Announcement channels + Summaries</strong>: Send condensed decision logs to org‑wide channels so everyone’s aligned—no marathon update calls required.</li>
+<li><strong>APIs for custom flows</strong>: Developers can pull meeting summaries into dashboards, client portals, or compliance archives using our admin APIs.</li>
+<li><strong>Workflow Builder magic</strong>: Trigger follow‑up tasks automatically. Example: Board meeting wraps → AI summary lands in #leadership → Workflow sends key metrics to finance app.</li>
+<li><strong>Searchable knowledge</strong>: Summaries become part of your team’s shared history, instantly accessible with Slack’s search.</li>
+</ul>
+<p>This is where Slack stands out: every new AI feature snaps into your existing rhythms instead of forcing new ones.</p>
+<hr />
+<h2>How we compare</h2>
+<p>You’ve probably heard the pitches from other big players:</p>
+<ul>
+<li><strong>Microsoft Teams’ Intelligent Recap</strong> <em>(in Teams Premium)</em>: Useful if your org is all‑in on Microsoft, but locked behind a premium license and tied to the Teams interface. It works—if you live in their ecosystem.</li>
+<li><strong>Google Meet AI Note‑Taker</strong>: Great for capturing details, but primarily focused on Meet sessions. Limited flexibility for multi‑tool environments.</li>
+</ul>
+<p>Here’s the difference:<br />
+Slack’s AI Meeting Summarizer isn’t tied to one meeting app. It meets you where the <em>work</em> happens—your shared channels—capturing decisions across Zoom calls, Meet sessions, in‑person huddles, or even spontaneous brainstorms. You get <strong>real‑time, actionable insights</strong> without being forced into a single vendor’s workflow. And you decide how those summaries get used—because AI should <em>empower</em>, not dictate.</p>
+<hr />
+<h2>Designed for the people who actually do the work</h2>
+<p>We built the AI Meeting Summarizer with our core audiences in mind:</p>
+<ul>
+<li><strong>Fast‑moving teams</strong> (startups, product squads, agencies): Replace “Can someone send notes?” with “Done—it’s already in Slack.”</li>
+<li><strong>Execs and managers</strong>: Scan the recap and jump into the thread with quick decisions, rather than wading through full transcripts.</li>
+<li><strong>Sales &amp; customer success</strong>: Log client meeting takeaways instantly, right next to the deal pipeline.</li>
+<li><strong>Admins &amp; IT teams</strong>: Manage permissions and data flow using enterprise‑grade controls and APIs.</li>
+</ul>
+<p>Every feature is about making sure you don’t just have <em>more information</em>—you have <strong>the right information</strong> at exactly the right moment.</p>
+<hr />
+<h2>The bigger picture: less meeting fatigue, more momentum</h2>
+<p>We all know meeting overload is real. With professionals averaging 5–8 meetings per week (and sales and exec roles racking up even more), every minute counts. AI recaps help reclaim time and mental bandwidth, so your team can shift energy from “Who said what?” to “What’s next?”</p>
+<p>The trend is clear: AI tools that automate low‑value chores—like manual notetaking—free humans to focus on creative, strategic, and relationship‑driven work. That’s where you and your team shine.</p>
+<hr />
+<h2>How to get started</h2>
+<ul>
+<li><strong>Enable the feature</strong> in your workspace (check your admin settings or talk to your Slack admin).</li>
+<li><strong>Pick your delivery spot</strong>—channel, DM, workflow.</li>
+<li><strong>Run your next meeting</strong> without taking a single note.</li>
+<li><strong>Watch productivity go up</strong>—and maybe even end meetings a few minutes early.</li>
+</ul>
+<hr />
+<h2>Ready to work smarter?</h2>
+<p>The future of work isn’t about cramming in more meetings—it’s about getting <em>more</em> from the ones you have. Slack’s AI Meeting Summarizer, plugged into your existing channels and workflows, is the fastest way to turn conversation into coordinated action.</p>
+<p>So the next time someone says, “Can you send me the meeting notes?”—you can just drop a thumbs‑up emoji and get back to making things happen.</p>
+<hr />
+<p><strong>Try the AI Meeting Summarizer today</strong>—and make every meeting count.</p>
+<hr />
+<p>If you like, I can also produce a <strong>shorter, social‑friendly version</strong> of this piece or a <strong>feature spotlight graphic</strong> for launch campaigns to keep the tone and competitive edge consistent across channels. Would you like me to do that next?</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="card-header method-header">
+                        <h2>🔄 Method C Output</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="task-label">DocuSign's New AI Contract Analyzer Feature</div>
+                        <div class="content-wrapper">
+                            <h1>Meet DocuSign AI Contract Analyzer: Faster Reviews, Clearer Risk, Right Where Agreements Happen</h1>
+<p>Every contract tells a story—what’s promised, what’s protected, and where risk hides in the fine print. The challenge? Teams are juggling more agreements than ever, across more systems, with growing expectations for speed and compliance.</p>
+<p>Today, we’re introducing DocuSign AI Contract Analyzer: an explainable, playbook-aware review copilot built into the agreement lifecycle. It helps your team spot risk, propose compliant redlines, and move work forward—without leaving the tools you already use to prepare, negotiate, sign, and manage agreements.</p>
+<h2>Why now? Legal AI is maturing—and getting practical</h2>
+<p>In the past year, legal teams have shifted from experimentation to embedding AI in real workflows. The focus has sharpened on four things:
+- Domain specificity: AI that understands clauses, obligations, and fallbacks—not just generic summarization.
+- Governance: Explainable outputs with citations and audit trails, plus privacy and data residency controls.
+- Lifecycle integration: Assistance in the flow—Word, CLM, eSignature—so reviews are faster and handoffs smoother.
+- Human-in-the-loop: AI accelerates first pass; attorneys retain final call.</p>
+<p>DocuSign AI Contract Analyzer was designed for this reality. It brings legal-grade intelligence to the moments that matter across the agreement lifecycle.</p>
+<h2>How it works</h2>
+<ul>
+<li>Detect what matters: Analyzer flags risky language, missing provisions, and deviations from your playbook—at clause level, with confidence indicators.</li>
+<li>Understand the “why”: Every finding includes citations and rationale, so attorneys can review in minutes, not hours.</li>
+<li>Redline with confidence: Get suggested edits mapped to your approved fallback language, configurable by contract type and region.</li>
+<li>Work in your tools: Review in our web experience, inside Microsoft Word via our add-in, or as a pre-sign check in eSignature and CLM.</li>
+<li>Automate the next step: Findings create tasks, trigger approvals, or block signature based on thresholds—all captured in audit logs.</li>
+</ul>
+<h2>Designed for the people doing the work</h2>
+<ul>
+<li>Legal Operations</li>
+<li>Standardize policy enforcement, reduce variance, and report on cycle times and risk trends using structured outputs and dashboards.</li>
+<li>In-house Counsel</li>
+<li>Accelerate first-pass reviews with explainable, clause-level insights and redlines grounded in your playbook and precedents.</li>
+<li>Procurement</li>
+<li>Triage vendor paper at intake, align DPAs/MSAs to approved language, and escalate only what truly needs counsel.</li>
+<li>Sales and Revenue</li>
+<li>Move NDAs, order forms, and MSAs faster with fewer legal handoffs—without compromising on risk control.</li>
+<li>Compliance and Risk</li>
+<li>Maintain audit-ready logs, enforce standard disclosures, and surface obligations that require tracking.</li>
+</ul>
+<h2>What makes it different</h2>
+<ul>
+<li>Lifecycle-native intelligence</li>
+<li>Analyzer lives where agreements are prepared, negotiated, signed, and managed. It leverages your CLM and eSignature context to make smarter calls and automate follow-through.</li>
+<li>Explainable by design</li>
+<li>Findings are cited to clauses and playbooks, with confidence indicators and rationale—so you can defend decisions inside and outside the business.</li>
+<li>Playbook-aware redlining</li>
+<li>Suggested edits align to your approved fallbacks and escalation rules. You set thresholds by contract type and jurisdiction.</li>
+<li>Enterprise governance</li>
+<li>Role-based access, data controls, audit logs, and data residency options come standard.</li>
+</ul>
+<h2>How we compare</h2>
+<p>You may have tried general-purpose assistants that summarize documents, or CLM tools that analyze contracts within their own ecosystems. These tools can help—but they often miss one of two things: legal-grade explainability or lifecycle-native integration.</p>
+<ul>
+<li>Generalist AI assistants (e.g., productivity-suite copilots) are convenient but not tuned for legal playbooks, clause ontologies, or governed contract workflows.</li>
+<li>Point solutions shine at extraction or search, yet frequently sit outside the negotiation and eSignature stages—leaving teams to stitch insights into actual processes.</li>
+<li>Some CLM-native AIs are powerful within their walled gardens but require everything to live inside one system.</li>
+</ul>
+<p>DocuSign AI Contract Analyzer combines legal-grade analysis with end-to-end lifecycle integration—so your team gets both speed and control, in context.</p>
+<h2>Real-world outcomes</h2>
+<ul>
+<li>NDA triage</li>
+<li>Auto-approve low-risk NDAs using your standards; escalate exceptions with annotated rationale. Turnaround evolves from days to same day in typical workflows.</li>
+<li>Vendor DPA governance</li>
+<li>Detect deviations at intake, propose approved fallbacks, and route privacy-sensitive terms to the right reviewer. Fewer renegotiation loops and stronger compliance posture.</li>
+<li>MSA acceleration</li>
+<li>Analyzer proposes redlines with citations to accepted prior language. Attorneys validate quickly. Negotiations take fewer rounds, and deals move sooner.</li>
+</ul>
+<h2>Security, privacy, and control</h2>
+<ul>
+<li>Keep humans in control with approval gates and confidence thresholds.</li>
+<li>Maintain traceability with clause-level citations and audit logs.</li>
+<li>Align with organizational policies through role-based access, data retention controls, and data residency options.</li>
+</ul>
+<h2>Get started</h2>
+<ul>
+<li>Turn it on: Admins can enable AI Contract Analyzer in your DocuSign environment and configure policies by contract type.</li>
+<li>Start where volume meets value: Pilot NDAs, DPAs, or standard MSAs to prove cycle-time and variance reduction.</li>
+<li>Integrate your flow: Use the Word add-in for negotiation, pre-sign checks in eSignature, and CLM automations to route and report.</li>
+<li>Measure impact: Track cycle times, exception rates, and playbook adherence to document ROI.</li>
+</ul>
+<h2>Move faster, stay safer</h2>
+<p>With DocuSign AI Contract Analyzer, you don’t have to choose between speed and control. Bring explainable, playbook-aware intelligence into the agreement lifecycle—so your team can focus on judgment and strategy, not manual redlines.</p>
+<p>Ready to see it in action? Contact us for a tailored demo and start your pilot on your highest-volume contract types.</p>
+<hr />
+<p>If helpful, we can also provide a compact launch brief, role-based one-pagers, and a slide-ready competitive matrix to align stakeholders and accelerate internal rollout.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        
